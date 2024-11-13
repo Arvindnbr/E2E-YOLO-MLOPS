@@ -25,19 +25,51 @@ def read_yaml(yaml_path:Path)-> ConfigBox:
         raise ValueError("yaml file is empty")
     except Exception as e:
         raise e
+       
+def load_params_from_yaml(file_path: str) -> ConfigBox:
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
+
+    yaml_param = config.get('param',{})
+    default_params = asdict(Params(epochs=0, resume=False))  
+    # dummy required values
+    #merged_dict = {key: yaml_param.get(key, default_params[key]) for key in default_params}
+    merged_dict = {}
+
+    for key in default_params:
+        merged_dict[key] = yaml_param.get(key, default_params[key])
+    
+    
+    return ConfigBox(merged_dict)
+import os
+import yaml
 
 @ensure_annotations
 def update_train_yaml(yaml_path, path_dir):
-    with open(yaml_path,'r') as file:
+
+    with open(yaml_path, 'r') as file:
         data = yaml.safe_load(file)
-    data['train'] = 'train/images'
-    data['val'] = 'valid/images'
-    new_key = 'path'
-    new_value = path_dir
-    data[new_key] = new_value
+
+    train_path = os.path.join(path_dir, 'train/images')
+    val_path = os.path.join(path_dir, 'valid/images')
+
+    if data.get('train') != train_path:
+        data['train'] = train_path
+        print(f"Updated 'train' path to: {train_path}")
+    
+    if data.get('val') != val_path:
+        data['val'] = val_path
+        print(f"Updated 'val' path to: {val_path}")
+
+    if data.get('path') != path_dir:
+        data['path'] = path_dir
+        print(f"Added/Updated 'path' to: {path_dir}")
 
     with open(yaml_path, 'w') as file:
-        yaml.safe_dump(data, file,default_flow_style=False)
+        yaml.safe_dump(data, file, default_flow_style=False)
+
+    print("data.yaml has been updated successfully.")
+
 
 @ensure_annotations
 def create_directories(path_to_dir: list, verbose=True):
@@ -170,18 +202,3 @@ def start_tensorboard(logdir="runs/", port=6006):
 
     return process
 
-def load_params_from_yaml(file_path: str) -> ConfigBox:
-    with open(file_path, 'r') as file:
-        config = yaml.safe_load(file)
-
-    yaml_param = config.get('param',{})
-    default_params = asdict(Params(epochs=0, resume=False))  
-    # dummy required values
-    #merged_dict = {key: yaml_param.get(key, default_params[key]) for key in default_params}
-    merged_dict = {}
-
-    for key in default_params:
-        merged_dict[key] = yaml_param.get(key, default_params[key])
-    
-    
-    return ConfigBox(merged_dict)

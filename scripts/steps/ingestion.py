@@ -18,7 +18,7 @@ class DataIngestion:
     def __init__(self, config: DataIngestionConfig):
         self.config = config
 
-    def local_data(self):
+    def local_data(self, test_set: bool):
         images_folder = os.path.join(self.config.data_source, "images")
         labels_folder = os.path.join(self.config.data_source, "labels")
         output_folder = self.config.unzip_dir
@@ -28,44 +28,84 @@ class DataIngestion:
         
         filenames = [os.path.splitext(f)[0] for f in os.listdir(labels_folder) if f.endswith(".txt")]
 
-        train, valid = train_test_split(filenames,train_size = 0.7, test_size = 0.3, random_state = 42)
-        valid, test = train_test_split(valid, train_size = 0.7, test_size = 0.3, random_state = 42)
-        splits = {
-            'train': train,
-            'valid': valid,
-            'test': test
-        }
+        if test_set == True:
+            train, valid = train_test_split(filenames,train_size = 0.7, test_size = 0.3, random_state = 42)
+            valid, test = train_test_split(valid, train_size = 0.7, test_size = 0.3, random_state = 42)
+            splits = {
+                'train': train,
+                'valid': valid,
+                'test': test
+            }
 
-        for split in ['train', 'valid', 'test']:
-            os.makedirs(os.path.join(output_folder, split, "images"), exist_ok=True)
-            os.makedirs(os.path.join(output_folder, split, "labels"), exist_ok=True)
-        for split, file in splits.items():
-            for filename in file:
-                label_path = os.path.join(labels_folder,f"{filename}.txt")
-                if os.path.exists(label_path):
-                    image_path = find_image_file(images_folder,filename)
-                    if image_path:
-                        shutil.copy(image_path,os.path.join(output_folder,split,'images'))
-                        shutil.copy(label_path,os.path.join(output_folder,split,'labels'))
+            for split in ['train', 'valid', 'test']:
+                os.makedirs(os.path.join(output_folder, split, "images"), exist_ok=True)
+                os.makedirs(os.path.join(output_folder, split, "labels"), exist_ok=True)
+            for split, file in splits.items():
+                for filename in file:
+                    label_path = os.path.join(labels_folder,f"{filename}.txt")
+                    if os.path.exists(label_path):
+                        image_path = find_image_file(images_folder,filename)
+                        if image_path:
+                            shutil.copy(image_path,os.path.join(output_folder,split,'images'))
+                            shutil.copy(label_path,os.path.join(output_folder,split,'labels'))
+                        else:
+                            logger.info(f"Image for '{filename}' not found. Skipping.")
                     else:
-                        logger.info(f"Image for '{filename}' not found. Skipping.")
-                else:
-                    logger.info(f"Label file '{filename}.txt' not found. Skipping.")
-                
-        logger.info(f'Data ingested from {self.config.data_source} to {output_folder}')
-        yaml_file = os.path.join(output_folder,"data.yaml")
-        yaml_content = {
-            'path': f"{output_folder}",
-            'train': "train/images",
-            'val': "valid/images",
-            'test': "test/images",
-            'nc': len(self.config.classes),
-            'names': self.config.classes
-        }
-        with open (yaml_file, 'w') as file:
-            yaml.dump(yaml_content, file)
-        logger.info(f"Dataset created with splits \ntrain: {output_folder}/train \nvalid: {output_folder}/valid \ntest: {output_folder}/test \ncorresponding {yaml_file} created")
-        return str(output_folder)
+                        logger.info(f"Label file '{filename}.txt' not found. Skipping.")
+                    
+            logger.info(f'Data ingested from {self.config.data_source} to {output_folder}')
+            yaml_file = os.path.join(output_folder,"data.yaml")
+            yaml_content = {
+                'path': f"{output_folder}",
+                'train': "train/images",
+                'val': "valid/images",
+                'test': "test/images",
+                'nc': len(self.config.classes),
+                'names': self.config.classes
+            }
+            with open (yaml_file, 'w') as file:
+                yaml.dump(yaml_content, file)
+            logger.info(f"Dataset created with splits \ntrain: {output_folder}/train \nvalid: {output_folder}/valid \ntest: {output_folder}/test \ncorresponding {yaml_file} created")
+            return str(output_folder)
+        
+        elif test_set == False:
+            train, valid = train_test_split(filenames,train_size = 0.7, test_size = 0.2, random_state = 42)
+            
+            splits = {
+                'train': train,
+                'valid': valid,
+            }
+
+            for split in ['train', 'valid',]:
+                os.makedirs(os.path.join(output_folder, split, "images"), exist_ok=True)
+                os.makedirs(os.path.join(output_folder, split, "labels"), exist_ok=True)
+            for split, file in splits.items():
+                for filename in file:
+                    label_path = os.path.join(labels_folder,f"{filename}.txt")
+                    if os.path.exists(label_path):
+                        image_path = find_image_file(images_folder,filename)
+                        if image_path:
+                            shutil.copy(image_path,os.path.join(output_folder,split,'images'))
+                            shutil.copy(label_path,os.path.join(output_folder,split,'labels'))
+                        else:
+                            logger.info(f"Image for '{filename}' not found. Skipping.")
+                    else:
+                        logger.info(f"Label file '{filename}.txt' not found. Skipping.")
+                    
+            logger.info(f'Data ingested from {self.config.data_source} to {output_folder}')
+            yaml_file = os.path.join(output_folder,"data.yaml")
+            yaml_content = {
+                'path': f"{output_folder}",
+                'train': "train/images",
+                'val': "valid/images",
+                'nc': len(self.config.classes),
+                'names': self.config.classes
+            }
+            with open (yaml_file, 'w') as file:
+                yaml.dump(yaml_content, file)
+            logger.info(f"Dataset created with splits \ntrain: {output_folder}/train \nvalid: {output_folder}/valid \ncorresponding {yaml_file} created")
+            return str(output_folder)
+
     
 
     def download_data(self)->str:
@@ -104,13 +144,23 @@ def data_ingest(config:DataIngestionConfig) -> Annotated[str, "Base_dataset"]:
         ingestion = DataIngestion(config)
         if os.path.exists(config.data_source):
             directry = str(config.unzip_dir)
-            files = [f"{directry}/{split}/{t}" for split in ["train", "valid", "test"] for t in ["images", "labels"]] + [f"{directry}/data.yaml"] + [directry]
-            if not any(os.path.exists(path) for path in files):
-                return ingestion.local_data()
-            else:
-                logger.info(f"Dataset pre exist in the specified {config.unzip_dir}\nskipping data ingestion")
-                print(f"Dataset pre exist in the specified {config.unzip_dir}\nskipping data ingestion")
-                return directry
+            test_set = config.test_set
+            if test_set == True:
+                files = [f"{directry}/{split}/{t}" for split in ["train", "valid", "test"] for t in ["images", "labels"]] + [f"{directry}/data.yaml"] + [directry]
+                if not any(os.path.exists(path) for path in files):
+                    return ingestion.local_data(test_set)
+                else:
+                    logger.info(f"Dataset pre exist in the specified {config.unzip_dir}\nskipping data ingestion")
+                    print(f"Dataset pre exist in the specified {config.unzip_dir}\nskipping data ingestion")
+                    return directry
+            elif test_set == False:
+                files = [f"{directry}/{split}/{t}" for split in ["train", "valid",] for t in ["images", "labels"]] + [f"{directry}/data.yaml"] + [directry]
+                if not any(os.path.exists(path) for path in files):
+                    return ingestion.local_data(test_set)
+                else:
+                    logger.info(f"Dataset pre exist in the specified {config.unzip_dir}\nskipping data ingestion")
+                    print(f"Dataset pre exist in the specified {config.unzip_dir}\nskipping data ingestion")
+                    return directry
         else:
             ingestion.download_data()
             return ingestion.extract_zipfile()

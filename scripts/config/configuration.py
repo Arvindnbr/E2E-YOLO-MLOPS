@@ -5,6 +5,10 @@ from scripts.entity.entity import *
 
 
 
+
+
+
+
 class ConfigurationManager:
     def __init__(self,config_filepath = CONFIG_FILE_PATH):
         self.config = read_yaml(config_filepath)
@@ -18,7 +22,8 @@ class ConfigurationManager:
             root_dir = config.root_dir,
             data_source= config.data_source,
             unzip_dir= config.unzip_dir,
-            classes = config.classes
+            classes = config.classes, 
+            test_set = config.test_set,
             )
         return data_ingestion_config
     
@@ -28,7 +33,7 @@ class ConfigurationManager:
         dataset_config = DataSetConfig(
             classes= config.classes,
             new_data_path= config.new_data_path,
-            dataset_name=config.dataset_name
+            dataset_name=config.dataset_name,
         )
         return dataset_config
     
@@ -55,6 +60,7 @@ class ConfigurationManager:
             resume = param.resume,
             seed = param.seed,
             imgsz = param.imgsz,
+            
             patience = param.patience,
             cache = param.cache, 	       
             workers = param.workers,	         
@@ -86,6 +92,7 @@ class ConfigurationManager:
             auto_augment = param.auto_augment, 
             erasing = param.erasing,     
             crop_fraction = param.crop_fraction,
+            freeze = param.freeze,
             )
         return params
     

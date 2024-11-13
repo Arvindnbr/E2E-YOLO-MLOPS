@@ -184,6 +184,7 @@ def retrain(config: Params,
                 auto_augment = config.auto_augment,
                 erasing = config.erasing,
                 crop_fraction = config.crop_fraction,
+                freeze = config.freeze,
                 exist_ok = True
                 )
     

@@ -41,10 +41,19 @@ def inference() -> Annotated[str,"dataset_root"]:
         args = yaml.safe_load(f)
     dataset_root = os.path.split(args.get('data'))[0]
 
-    val_status, metric = yolov8_validation_step(model_path=model,
+    if not eval.data_source.endswith('.yaml'):
+        val_status, metric = yolov8_validation_step(model_path=model,
                                         threshold=threshold.mAP50,
                                         validation_name = eval.name
                                         )
+    else:
+        val_status, metric = yolov8_validation_step(model_path=model,
+                                        threshold=threshold.mAP50,
+                                        validation_name = eval.name,
+                                        validation_root = f"{eval.save_dir}/validation",
+                                        dataset_config = eval.data_source,
+                                        )
+   
     
     with open(os.path.join(dataset_root,"data_validation","trigger.txt"), 'r') as file:
         trigger = file.readline()
@@ -66,7 +75,6 @@ def inference() -> Annotated[str,"dataset_root"]:
         name, version, model = production_model(run_id, threshold)
 
     
-     
 
 
 

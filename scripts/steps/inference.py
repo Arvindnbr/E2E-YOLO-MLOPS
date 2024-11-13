@@ -46,9 +46,10 @@ def yolov8_prediction(model_path: str,
 
 
 @step(enable_cache=False)
-def yolov8_validation_step(model_path: str,
-                           threshold: float,
-                           validation_name:str) -> Tuple[Annotated[str, "Retrain_trigger"],
+def yolov8_validation_step(model_path: str, threshold: float, validation_name:str,
+                           validation_root: str = None,dataset_config: str = None, 
+                           split: str = "test", 
+                           ) -> Tuple[Annotated[str, "Retrain_trigger"],
                            Annotated[Dict[str, Any], ArtifactConfig(name="infered_metrics",is_model_artifact=True)]]:
     """Validates the YOLOv8 model and checks if retraining is needed.
 
@@ -66,10 +67,14 @@ def yolov8_validation_step(model_path: str,
     """
 
     model = YOLO(model_path)
-    project_root = model.ckpt["train_args"]["project"]
-    validation_root = f"{project_root}/validation"
-    dataset_config = model.ckpt["train_args"]["data"]
-    metrics = model.val(data=dataset_config, split="test", project=validation_root, name=validation_name)
+
+    if validation_root is None:
+        project_root = model.ckpt["train_args"]["project"]
+        validation_root = f"{project_root}/validation"
+    if dataset_config is None:
+        dataset_config = model.ckpt["train_args"]["data"]
+
+    metrics = model.val(data=dataset_config, split=split, project=validation_root, name=validation_name)
     print(f"mAP50 of model : {metrics.box.map50}")
     print(f"mAP50-95 of model : {metrics.box.map}")
 

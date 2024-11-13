@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -8,6 +8,7 @@ class DataIngestionConfig:
     data_source: str
     unzip_dir: Path
     classes: list
+    test_set: bool
 
 @dataclass(frozen=True)
 class DataSetConfig:
@@ -64,6 +65,7 @@ class Params:
     auto_augment: str = 'randaugment' 
     erasing: float = 0.4 	              
     crop_fraction: float = 1.0
+    freeze: int = field(default=None)
 
 @dataclass(frozen=True)
 class TresholdMetrics:
