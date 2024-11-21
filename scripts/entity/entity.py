@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-
+from typing import Union, Tuple
 
 @dataclass(frozen=True)
 class DataIngestionConfig:
@@ -33,7 +33,11 @@ class Params:
     save_period: int = -1
     batch: int = 16
     seed: int = 0
+<<<<<<< HEAD
+    imgsz: Union[int, Tuple[int, int]] = (1920,1080)
+=======
     imgsz: int = 640 
+>>>>>>> 4686bb7ee9fad4ae7452049a50633456a1cee345
     patience: int = 30
     cache: str = 'False' 	       
     workers: int = 8 	         
@@ -66,6 +70,16 @@ class Params:
     erasing: float = 0.4 	              
     crop_fraction: float = 1.0
     freeze: int = field(default=None)
+<<<<<<< HEAD
+
+    # def __post_init__(self):
+    #     if isinstance(self.imgsz, tuple):
+    #         if len(self.imgsz) == 1:
+    #             object.__setattr__(self, 'imgsz', self.imgsz[0])
+    #         elif len(self.imgsz) != 2:
+    #             raise ValueError("imgsz must be either a single integer or a tuple of two integers.")
+=======
+>>>>>>> 4686bb7ee9fad4ae7452049a50633456a1cee345
 
 @dataclass(frozen=True)
 class TresholdMetrics:
